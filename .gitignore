@@ -1,0 +1,5 @@
+# live configuration with broker credentials and your optimizer serials
+config/config.ini
+# runtime data (persisted topology)
+data/
+.DS_Store

@@ -1,0 +1,27 @@
+# Example deployment. Copy config/config.ini.example → config/config.ini first.
+services:
+  taptap-mqtt:
+    image: ghcr.io/smartnightly/taptap-mqtt:latest
+    container_name: taptap-mqtt
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Zurich
+    volumes:
+      - ./config/config.ini:/config/config.ini:ro
+      - ./data:/data
+    # --- USB/serial RS-485 adapter instead of an Ethernet converter ---
+    # devices:
+    #   - /dev/ttyUSB0:/dev/ttyUSB0
+    # The container runs as uid 1000; add the host group that owns the device (often "dialout" = 20):
+    # group_add:
+    #   - "20"
+    #
+    # --- If the container cannot reach the RS-485-to-Ethernet converter through the bridge network ---
+    # network_mode: host
+
+    # To build locally instead of pulling from GHCR:
+    # build:
+    #   context: .
+    #   args:
+    #     TAPTAP_VERSION: v0.2.6
+    #     TAPTAP_MQTT_VERSION: v0.2.6

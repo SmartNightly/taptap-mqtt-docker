@@ -1,0 +1,73 @@
+# taptap-mqtt configuration — copy to config/config.ini and adjust.
+# Reference: https://github.com/litinoveweedle/taptap-mqtt (config.ini.example of the pinned release)
+#
+# Paths below are paths INSIDE the container (see docker-compose.yml for the mounts).
+
+[MQTT]
+# Your MQTT broker (Mosquitto, ioBroker mqtt adapter, Home Assistant add-on, ...)
+SERVER = 192.168.1.10
+PORT = 1883
+QOS = 1
+TIMEOUT = 5
+USER = mqttuser
+PASS = mqttpass
+
+[TAPTAP]
+# error | warning | info | debug
+LOG_LEVEL = info
+# Bundled binary — do not change
+BINARY = /usr/local/bin/taptap
+
+# Exactly ONE of the two transports:
+#   a) USB/serial RS-485 adapter → SERIAL = /dev/ttyUSB0 (pass the device into the container), ADDRESS empty
+#   b) RS-485-to-Ethernet converter (e.g. Waveshare RS485 TO ETH) → SERIAL empty, ADDRESS + PORT set
+SERIAL =
+ADDRESS = 192.168.1.50
+PORT = 502
+
+# Optimizer list as STRING:NAME:SERIAL triplets (comma separated).
+#   STRING  optional group name (e.g. the PV string), [a-zA-Z0-9_]
+#   NAME    module name, [a-zA-Z0-9_]; the MQTT node key is STRING+NAME (A:01: → A01)
+#   SERIAL  optional barcode from the optimizer sticker / Tigo cloud, format X-XXXXXXX
+#
+# Start without serials (A:01:, A:02:, ...) — taptap-mqtt logs every unknown serial it sees.
+# Serial messages are rare and often only appear at night; allow 24 h for full discovery.
+# Then PIN the serials here: without them a discovered module is assigned to the "first available"
+# name, so a module that is offline at start-up shifts the whole mapping and mixes up the history.
+MODULES = A:01:, A:02:, A:03:, A:04:, A:05:, A:06:, B:01:, B:02:, B:03:, B:04:, B:05:, B:06:
+
+# MQTT topic layout: <TOPIC_PREFIX>/<TOPIC_NAME>/...
+TOPIC_PREFIX = tigo
+TOPIC_NAME = tigo1
+# Seconds without a message before a module counts as offline
+TIMEOUT = 180
+# Seconds between MQTT state updates. Keep this in mind for rate-limited consumers:
+# a 30-module plant at UPDATE=15 produces ~1400 value updates per minute.
+UPDATE = 30
+# Persisted topology (module ↔ serial) — keep it on the /data volume so restarts start fast
+STATE_FILE = /data/taptap.json
+
+[HA]
+# Home Assistant MQTT discovery. For HA/OpenHAB keep "homeassistant".
+# To DISABLE discovery use a dummy prefix such as "disabled": the validator of taptap-mqtt v0.2.6
+# rejects an empty string although the upstream comment says "set empty to disable".
+DISCOVERY_PREFIX = homeassistant
+# true for OpenHAB or Home Assistant < 2024.12 (per-entity discovery), else false. Required key.
+DISCOVERY_LEGACY = false
+# Topic taptap-mqtt watches to re-publish discovery when HA restarts (use "disabled/status" together with a dummy prefix)
+BIRTH_TOPIC = homeassistant/status
+NODES_AVAILABILITY_ONLINE = false
+NODES_AVAILABILITY_IDENTIFIED = false
+STRINGS_AVAILABILITY_ONLINE = false
+STRINGS_AVAILABILITY_IDENTIFIED = false
+STATS_AVAILABILITY_ONLINE = false
+STATS_AVAILABILITY_IDENTIFIED = false
+NODES_SENSORS_RECORDER = energy
+STRINGS_SENSORS_RECORDER = energy
+STATS_SENSORS_RECORDER = energy
+
+[RUNTIME]
+# Recoverable errors before the process gives up; 0 = retry forever (let Docker's restart policy handle the rest)
+MAX_ERROR = 0
+# Heartbeat file: created while running, touched regularly, removed on shutdown. The image HEALTHCHECK looks at it.
+RUN_FILE = /run/taptap/taptap.run
