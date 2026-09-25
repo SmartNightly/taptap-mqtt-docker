@@ -51,7 +51,7 @@ jobs:
       # Smoke test on the native platform before anything is pushed:
       # the taptap binary must run, and taptap-mqtt must start and reject a missing config cleanly.
       - name: Build amd64 for smoke test
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -101,7 +101,7 @@ jobs:
             org.opencontainers.image.description=Tigo TAP/CCA optimizer data to MQTT (taptap ${{ env.TAPTAP_VERSION }} + taptap-mqtt ${{ env.TAPTAP_MQTT_VERSION }})
 
       - name: Build and push (${{ env.PLATFORMS }})
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ env.PLATFORMS }}
